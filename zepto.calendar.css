@@ -11,9 +11,10 @@ body {
   margin: 0 auto;
 
   border: 1px solid #afafaf;
+  background: #fefefe;
+
   border-radius: 3px;
   box-shadow: 0 0 6px rgba(0, 0, 0, .25);
-  background: #fefefe;
 
   font-weight: bold;
   color: #4b5c66;
@@ -24,13 +25,12 @@ body {
     padding-top: 10px;
     position: relative;
   }
-    .z-c-header .z-c-current {
-      height: 23px;
+    .z-c-header .z-c-label {
+      height: 26px;
+      line-height: 26px;
 
       position: relative;
       overflow: hidden;
-
-      line-height: 23px;
 
       font-size: 20px;
     }
@@ -47,16 +47,16 @@ body {
           width: 300px;
           float: left;
         }
+
     .z-c-header .z-c-previous,
     .z-c-header .z-c-next {
       width: 40px;
       height: 40px;
+      line-height: 40px;
 
       position: absolute;
       left: 0;
       top: 0;
-
-      line-height: 40px;
 
       cursor: pointer;
     }
@@ -65,27 +65,29 @@ body {
       right: 0;
     }
 
-    .z-c-header .z-c-labels {
+    .z-c-header .z-c-daylabels {
       height: 15px;
+      line-height: 15px;
+      margin-top: 5px;
+
       overflow: hidden;
       font-size: 10px;
-      line-height: 15px;
     }
-      .z-c-header .z-c-labels li {
+      .z-c-header .z-c-daylabels li {
         width: 42px;
         margin-left: 1px;
+
         float: left;
       }
-        .z-c-header .z-c-labels li:first-child {
+        .z-c-header .z-c-daylabels li:first-child {
           margin-left: 0;
         }
 
-.z-c-calendar-wrap {
+.z-c-holder {
   height: 215px;
   overflow: hidden;
   position: relative;
 }
-
   .z-c-calendar {
     overflow: hidden;
 

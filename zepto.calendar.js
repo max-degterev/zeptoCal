@@ -28,9 +28,17 @@
       start: this.dateToYMD(new Date())
     }, settings);
 
-    this.block = container;
+    this.els = {};
 
-    this.datesList = this.block.find('.z-c-calendar');
+    this.els.block = container;
+
+    this.els.header = this.els.block.find('.z-c-label');
+    this.els.label = this.els.block.find('.z-c-months');
+    this.els.prev = this.els.block.find('.z-c-previous');
+    this.els.next = this.els.block.find('.z-c-next');
+
+    this.els.holder = this.els.block.find('.z-c-holder');
+    this.els.calendar = this.els.block.find('.z-c-calendar');
 
     this.start = this.dateFromYMD(this.options.start);
     this.current = this.dateClone(this.start);
@@ -41,14 +49,31 @@
 
   Calendar.prototype.initialize = function() {
     var html = this.firstRender();
-    this.datesList.append(html);
+    this.els.calendar.append(html);
+
+    this.measure();
+    this.logic();
+  };
+
+  Calendar.prototype.measure = function() {
+    var cell = this.els.calendar.children('li:first-child');
+    this.size = {};
+
+    this.size.width = this.els.header.width();
+    this.size.cell = cell.height();
+
+    console.log(this.size, this.els)
+  };
+
+  Calendar.prototype.logic = function() {
+
   };
 
   Calendar.prototype.render = function() {
     var nextMonth = this.dateClone(this.current);
     nextMonth.setMonth(this.current.getMonth() + 1);
 
-    this.datesList.append(this.renderMonth(nextMonth));
+    this.els.calendar.append(this.renderMonth(nextMonth));
   };
 
   Calendar.prototype.firstRender = function() {
