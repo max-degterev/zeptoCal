@@ -61,12 +61,18 @@
 
     this.size.width = this.els.header.width();
     this.size.cell = cell.height();
-
-    console.log(this.size, this.els)
   };
 
   Calendar.prototype.logic = function() {
+    var handlePrev = function() {
 
+    };
+    var handleNext = function() {
+
+    };
+
+    this.els.prev.on('tap', handlePrev);
+    this.els.next.on('tap', handleNext);
   };
 
   Calendar.prototype.render = function() {
