@@ -1,0 +1,137 @@
+html {
+  background: #f6f6f6;
+}
+body {
+  padding: 30px;
+}
+
+
+.z-calendar {
+  width: 300px;
+  margin: 0 auto;
+
+  border: 1px solid #afafaf;
+  border-radius: 3px;
+  box-shadow: 0 0 6px rgba(0, 0, 0, .25);
+  background: #fefefe;
+
+  font-weight: bold;
+  color: #4b5c66;
+  text-align: center;
+}
+
+  .z-c-header {
+    padding-top: 10px;
+    position: relative;
+  }
+    .z-c-header .z-c-current {
+      height: 23px;
+
+      position: relative;
+      overflow: hidden;
+
+      line-height: 23px;
+
+      font-size: 20px;
+    }
+      .z-c-header .z-c-months {
+        width: 3600px;
+
+        overflow: hidden;
+
+        position: absolute;
+        left: 0;
+        top: 0;
+      }
+        .z-c-header .z-c-months li {
+          width: 300px;
+          float: left;
+        }
+    .z-c-header .z-c-previous,
+    .z-c-header .z-c-next {
+      width: 40px;
+      height: 40px;
+
+      position: absolute;
+      left: 0;
+      top: 0;
+
+      line-height: 40px;
+
+      cursor: pointer;
+    }
+    .z-c-header .z-c-next {
+      left: auto;
+      right: 0;
+    }
+
+    .z-c-header .z-c-labels {
+      height: 15px;
+      overflow: hidden;
+      font-size: 10px;
+      line-height: 15px;
+    }
+      .z-c-header .z-c-labels li {
+        width: 42px;
+        margin-left: 1px;
+        float: left;
+      }
+        .z-c-header .z-c-labels li:first-child {
+          margin-left: 0;
+        }
+
+.z-c-calendar-wrap {
+  height: 215px;
+  overflow: hidden;
+  position: relative;
+}
+
+  .z-c-calendar {
+    overflow: hidden;
+
+    position: absolute;
+    left: 0;
+    top: 0;
+
+    font-size: 24px;
+    line-height: 42px;
+  }
+    .z-c-calendar li {
+      width: 42px;
+      height: 42px;
+      float: left;
+      border-left: 1px solid #afafaf;
+      border-top: 1px solid #afafaf;
+    }
+      .z-c-calendar li.monday {
+        border-left: none;
+      }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

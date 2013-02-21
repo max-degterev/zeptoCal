@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Awesomecal</title>
+
+    <link rel="stylesheet" href="reset.css">
+    <link rel="stylesheet" href="zepto.calendar.css">
+  </head>
+  <body>
+    <div class="z-calendar">
+      <div class="z-c-header">
+        <div class="z-c-current">
+          <ul class="z-c-months">
+            <li>Январь</li>
+            <li>Февраль</li>
+            <li>Март</li>
+            <li>Апрель</li>
+            <li>Май</li>
+            <li>Июнь</li>
+            <li>Июль</li>
+            <li>Август</li>
+            <li>Сентябрь</li>
+            <li>Октябрь</li>
+            <li>Ноябрь</li>
+            <li>Декабрь</li>
+          </ul>
+        </div>
+        <span class="z-c-previous">&lt;</span>
+        <span class="z-c-next">&gt;</span>
+        <ul class="z-c-labels"><li>Пн</li><li>Вт</li><li>Ср</li><li>Чт</li><li>Пт</li><li>Сб</li><li>Вс</li></ul>
+      </div>
+
+      <div class="z-c-calendar-wrap">
+        <ul class="z-c-calendar"></ul>
+      </div>
+    </div>
+
+    <script src="zepto.js"></script>
+    <script src="zepto.calendar.js"></script>
+    <script>
+      c = $('.z-calendar').zeptoCalendar();
+    </script>
+  </body>
+</html>
