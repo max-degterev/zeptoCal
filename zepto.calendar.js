@@ -225,7 +225,7 @@
     }
   };
   Calendar.prototype.selectRange = function(ymd1, ymd2, className) {
-    var current = this.els.calendar.find('li.active[data-date="' + ymd1 + '"]'),
+    var current = this.els.calendar.find('li[data-date="' + ymd1 + '"]'),
         length = this.dateFromYMD(ymd2).getDate() - this.dateFromYMD(ymd1).getDate() + 1,
         i = 0;
 
@@ -233,18 +233,6 @@
       current = current.addClass(className).next();
     }
   };
-  // Calendar.prototype.selectRange = function(ymd1, ymd2, className) {
-  //   var date1 = this.dateFromYMD(ymd1),
-  //       date2 = +(this.dateFromYMD(ymd2)),
-  //       cells = this.els.calendar.find('li.active');
-
-  //   date1.setDate(date1.getDate() - 1); // offset this so we can increment in while loop straight away
-
-  //   while (+date1 < date2) {
-  //     date1.setDate(date1.getDate() + 1);
-  //     cells.filter('[data-date="' + this.dateToYMD(date1) + '"]').addClass(className);
-  //   }
-  // };
 
   Calendar.prototype.slideHeader = function() {
     var props = {},
