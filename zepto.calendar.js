@@ -120,10 +120,14 @@
   };
   Calendar.prototype.reset = function() {
     var props = {},
-        _this = this;
+        _this = this,
+        yesterday = this.dateClone(this.start);
 
     props[this.transition] = this.transform + ' ' + (this.options.duration / 1000) + 's';
     this.slide(0);
+
+    yesterday.setDate(yesterday.getDate() - 1);
+    this.selectRange(this.dateToYMD(this.current), this.dateToYMD(yesterday), 'locked');
 
     setTimeout(function() {
       _this.els.label.css(props);
@@ -158,6 +162,8 @@
     var handleSelect = function() {
       var date = this.getAttribute('data-date');
 
+      if (~this.className.indexOf('locked') || !date || ~_this.selected.indexOf(date)) return;
+
       if (_this.selected.length > 1) {
         _this.selected.length = 0;
       }
@@ -169,8 +175,8 @@
     this.els.prev.on('tap', handlePrev);
     this.els.next.on('tap', handleNext);
 
+    this.els.calendar.on('tap', 'li.active', handleSelect); // order is important
     this.els.calendar.on('tap', 'li', handleMoveCalendar);
-    this.els.calendar.on('tap', 'li.active', handleSelect);
   };
 
   Calendar.prototype.slide = function(shift) {
@@ -202,7 +208,7 @@
 
   Calendar.prototype.handleSelection = function() {
     var active = this.els.calendar.find('.active');
-    active.filter('li.selected').removeClass('selected selected_first selected_second');
+    this.els.calendar.find('li.selected').removeClass('selected selected_first selected_second');
 
     if (this.selected.length > 1) {
       this.selected.sort(); // TODO: check if this is actually safe
@@ -210,23 +216,35 @@
       active.filter('li[data-date="' + this.selected[0] + '"]').addClass('selected_first');
       active.filter('li[data-date="' + this.selected[1] + '"]').addClass('selected_second');
 
-      this.selectRange(active);
+      this.selected.push('selected');
+
+      this.selectRange.apply(this, this.selected);
     }
     else {
       active.filter('li[data-date="' + this.selected[0] + '"]').addClass('selected');
     }
   };
-  Calendar.prototype.selectRange = function(cells) {
-    var date1 = this.dateFromYMD(this.selected[0]),
-        date2 = +(this.dateFromYMD(this.selected[1]));
+  Calendar.prototype.selectRange = function(ymd1, ymd2, className) {
+    var current = this.els.calendar.find('li.active[data-date="' + ymd1 + '"]'),
+        length = this.dateFromYMD(ymd2).getDate() - this.dateFromYMD(ymd1).getDate() + 1,
+        i = 0;
 
-    date1.setDate(date1.getDate() - 1); // offset this so we can increment in while loop straight away
-
-    while (+date1 < date2) {
-      date1.setDate(date1.getDate() + 1);
-      cells.filter('[data-date="' + this.dateToYMD(date1) + '"]').addClass('selected');
+    for (; i < length; i++) {
+      current = current.addClass(className).next();
     }
   };
+  // Calendar.prototype.selectRange = function(ymd1, ymd2, className) {
+  //   var date1 = this.dateFromYMD(ymd1),
+  //       date2 = +(this.dateFromYMD(ymd2)),
+  //       cells = this.els.calendar.find('li.active');
+
+  //   date1.setDate(date1.getDate() - 1); // offset this so we can increment in while loop straight away
+
+  //   while (+date1 < date2) {
+  //     date1.setDate(date1.getDate() + 1);
+  //     cells.filter('[data-date="' + this.dateToYMD(date1) + '"]').addClass(className);
+  //   }
+  // };
 
   Calendar.prototype.slideHeader = function() {
     var props = {},
@@ -326,8 +344,6 @@
 
     return html;
   };
-
-
 
   $.extend(Calendar.prototype, utils);
 
