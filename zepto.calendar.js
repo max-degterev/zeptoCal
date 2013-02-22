@@ -4,11 +4,53 @@
 
 (function($){
   var utils = {};
+  (function(){
+    var _supportsInterface = function(isRaw) {
+      var div = document.createElement('div'),
+          vendors = 'Ms O Moz Webkit'.split(' '),
+          len = vendors.length,
+          memo = {};
+
+      return function(prop) {
+        var key = prop;
+
+        if (typeof memo[key] !== 'undefined') {
+          return memo[key];
+        }
+
+        if (typeof div.style[prop] !== 'undefined') {
+          memo[key] = prop;
+          return memo[key];
+        }
+
+        prop = prop.replace(/^[a-z]/, function(val) {
+          return val.toUpperCase();
+        });
+
+        for (var i = len - 1; i >= 0; i--) {
+          if (typeof div.style[vendors[i] + prop] !== 'undefined') {
+            if (isRaw) {
+              memo[key] = ('-' + vendors[i] + '-' + prop).toLowerCase();
+            }
+            else {
+              memo[key] = vendors[i] + prop;
+            }
+            return memo[key];
+          }
+        }
+
+        return false;
+      };
+    };
+
+    utils.supports = _supportsInterface(false);
+    utils.__supports = _supportsInterface(true);
+  })();
   utils.dateClone = function(date) {
     return new Date(date.getFullYear(), date.getMonth(), date.getDate());
   };
-  utils.datePurify = function(date) {
-    return new Date(date.getFullYear(), date.getMonth(), 1);
+  utils.datePurify = function(date, daysOnly) {
+    return new Date(date.getFullYear(), date.getMonth(), daysOnly ? date.getDate() : 1);
   };
   utils.dateToYMD = function(date) {
     return date.getFullYear() + '-' + ('0' + (date.getMonth() + 1)).slice(-2) + '-' + ('0' + date.getDate()).slice(-2);
@@ -20,12 +62,17 @@
   utils.dateMonthDaysNum = function(date) {
     return 32 - new Date(date.getFullYear(), date.getMonth(), 32).getDate();
   };
-
-
+  utils.getMonthWeeksNum = function(date) {
+    var daysNum = this.dateMonthDaysNum(date),
+        fDayO = this.datePurify(date).getDay(),
+        fDay = fDayO ? (fDayO - 1) : 6;
+    return Math.ceil((daysNum + fDay) / 7);
+  };
 
   var Calendar = function(container, settings) {
     this.options = $.extend({
-      start: this.dateToYMD(new Date())
+      start: this.dateToYMD(new Date()),
+      duration: 200
     }, settings);
 
     this.els = {};
@@ -41,8 +88,14 @@
     this.els.calendar = this.els.block.find('.z-c-calendar');
 
     this.start = this.dateFromYMD(this.options.start);
-    this.current = this.dateClone(this.start);
-    this.today = new Date();
+    this.current = this.datePurify(this.start);
+    this.today = this.datePurify(new Date(), true);
+
+    this.transform = this.__supports('transform');
+    this.transition = this.__supports('transition');
+
+    this.rendered = 0;
+    this.shift = 0;
 
     this.initialize();
   };
@@ -52,6 +105,7 @@
     this.els.calendar.append(html);
 
     this.measure();
+    this.reset();
     this.logic();
   };
 
@@ -62,17 +116,75 @@
     this.size.width = this.els.header.width();
     this.size.cell = cell.height();
   };
+  Calendar.prototype.reset = function() {
+    var props = {};
+
+    this.slide(0);
+
+    props[this.transition] = this.transform + ' ' + (this.options.duration / 1000) + 's';
+    this.els.label.css(props);
+    this.els.calendar.css(props);
+  };
 
   Calendar.prototype.logic = function() {
+    var _this = this;
     var handlePrev = function() {
-
+      if (_this.els.prev.hasClass('disabled')) return;
+      _this.slide(-1);
     };
     var handleNext = function() {
-
+      if (_this.els.next.hasClass('disabled')) return;
+      _this.slide(1);
     };
 
     this.els.prev.on('tap', handlePrev);
     this.els.next.on('tap', handleNext);
+  };
+
+  Calendar.prototype.slide = function(shift) {
+    var nextMonth = this.dateClone(this.current);
+
+    if (this.shift === 0) {
+      this.els.prev.addClass('disabled');
+    }
+    if (this.shift === 1) {
+      this.els.prev.removeClass('disabled');
+    }
+
+    this.current.setMonth(this.current.getMonth() + shift);
+    this.shift += shift;
+
+    if (this.rendered - this.shift <= 1) {
+      nextMonth.setMonth(nextMonth.getMonth() + 2);
+      this.els.calendar.append(this.renderMonth(nextMonth));
+    }
+
+    this.slideCalendar();
+    this.slideHeader();
+    this.setActive();
+  };
+
+  Calendar.prototype.slideHeader = function() {
+    var props = {},
+        offset = -(this.current.getMonth() * this.size.width);
+
+    props[this.transform] = 'translate3d(' + offset + 'px, 0, 0)';
+    this.els.label.css(props);
+  };
+  Calendar.prototype.slideCalendar = function() {
+    var props = {},
+        offset = -((this.els.calendar.find('li[data-date="' + this.dateToYMD(this.current) + '"]').index() / 7) | 0) * this.size.cell;
+    props[this.transform] = 'translate3d(0, ' + offset + 'px, 0)';
+
+    this.els.calendar.css(props);
+    this.els.holder.css({
+      height: this.getMonthWeeksNum(this.current) * this.size.cell
+    });
+  };
+  Calendar.prototype.setActive = function() {
+    var darr = this.dateToYMD(this.current).split('-');
+    this.els.calendar.find('.active').removeClass('active');
+    this.els.calendar.find('[data-date^="' + darr[0] + '-' + darr[1] + '"]').addClass('active');
   };
 
   Calendar.prototype.render = function() {
@@ -87,7 +199,7 @@
         prevMonth = this.dateClone(currentMonth); prevMonth.setMonth(this.start.getMonth() - 1);
 
     var prevDaysNum = this.dateMonthDaysNum(prevMonth),
-        prefillDaysNum = (this.start.getDay() ? this.start.getDay() : 7),
+        prefillDaysNum = (this.start.getDay() ? this.start.getDay() : 7) - 1,
         i = 0,
 
         html = '';
@@ -146,9 +258,12 @@
       (day > 6) && (day = 0);
     }
 
+    this.rendered++;
+
     return html;
   };
-  
+
+
 
   $.extend(Calendar.prototype, utils);
 
