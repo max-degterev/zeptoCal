@@ -94,6 +94,8 @@
     this.transform = this.__supports('transform');
     this.transition = this.__supports('transition');
 
+    this.selected = [];
+
     this.rendered = 0;
     this.shift = 0;
 
@@ -117,13 +119,16 @@
     this.size.cell = cell.height();
   };
   Calendar.prototype.reset = function() {
-    var props = {};
-
-    this.slide(0);
+    var props = {},
+        _this = this;
 
     props[this.transition] = this.transform + ' ' + (this.options.duration / 1000) + 's';
-    this.els.label.css(props);
-    this.els.calendar.css(props);
+    this.slide(0);
+
+    setTimeout(function() {
+      _this.els.label.css(props);
+      _this.els.calendar.css(props);
+    }, this.options.duration);
   };
 
   Calendar.prototype.logic = function() {
@@ -137,19 +142,39 @@
       _this.slide(1);
     };
 
+    var handleMoveCalendar = function() {
+      var date = this.getAttribute('data-date');
+
+      if (~this.className.indexOf('active') || !date) return;
+
+      if (_this.current.getMonth() < +date.split('-')[1] - 1) {
+        handleNext();
+      }
+      else {
+        handlePrev();
+      }
+    };
+
+    var handleSelect = function() {
+      var date = this.getAttribute('data-date');
+
+      if (_this.selected.length > 1) {
+        _this.selected.length = 0;
+      }
+
+      _this.selected.push(date);
+      _this.handleSelection();
+    };
+
     this.els.prev.on('tap', handlePrev);
     this.els.next.on('tap', handleNext);
+
+    this.els.calendar.on('tap', 'li', handleMoveCalendar);
+    this.els.calendar.on('tap', 'li.active', handleSelect);
   };
 
   Calendar.prototype.slide = function(shift) {
     var nextMonth = this.dateClone(this.current);
-
-    if (this.shift === 0) {
-      this.els.prev.addClass('disabled');
-    }
-    if (this.shift === 1) {
-      this.els.prev.removeClass('disabled');
-    }
 
     this.current.setMonth(this.current.getMonth() + shift);
     this.shift += shift;
@@ -162,6 +187,45 @@
     this.slideCalendar();
     this.slideHeader();
     this.setActive();
+
+    this.handleLimits();
+  };
+
+  Calendar.prototype.handleLimits = function() {
+    if (this.shift === 0) {
+      this.els.prev.addClass('disabled');
+    }
+    if (this.shift === 1) {
+      this.els.prev.removeClass('disabled');
+    }
+  };
+
+  Calendar.prototype.handleSelection = function() {
+    var active = this.els.calendar.find('.active');
+    active.filter('li.selected').removeClass('selected selected_first selected_second');
+
+    if (this.selected.length > 1) {
+      this.selected.sort(); // TODO: check if this is actually safe
+
+      active.filter('li[data-date="' + this.selected[0] + '"]').addClass('selected_first');
+      active.filter('li[data-date="' + this.selected[1] + '"]').addClass('selected_second');
+
+      this.selectRange(active);
+    }
+    else {
+      active.filter('li[data-date="' + this.selected[0] + '"]').addClass('selected');
+    }
+  };
+  Calendar.prototype.selectRange = function(cells) {
+    var date1 = this.dateFromYMD(this.selected[0]),
+        date2 = +(this.dateFromYMD(this.selected[1]));
+
+    date1.setDate(date1.getDate() - 1); // offset this so we can increment in while loop straight away
+
+    while (+date1 < date2) {
+      date1.setDate(date1.getDate() + 1);
+      cells.filter('[data-date="' + this.dateToYMD(date1) + '"]').addClass('selected');
+    }
   };
 
   Calendar.prototype.slideHeader = function() {
