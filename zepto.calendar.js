@@ -49,8 +49,8 @@
   utils.dateClone = function(date) {
     return new Date(date.getFullYear(), date.getMonth(), date.getDate());
   };
-  utils.datePurify = function(date, daysOnly) {
-    return new Date(date.getFullYear(), date.getMonth(), daysOnly ? date.getDate() : 1);
+  utils.datePurify = function(date) {
+    return new Date(date.getFullYear(), date.getMonth(), 1);
   };
   utils.dateToYMD = function(date) {
     return date.getFullYear() + '-' + ('0' + (date.getMonth() + 1)).slice(-2) + '-' + ('0' + date.getDate()).slice(-2);
@@ -62,12 +62,17 @@
   utils.dateMonthDaysNum = function(date) {
     return 32 - new Date(date.getFullYear(), date.getMonth(), 32).getDate();
   };
-  utils.getMonthWeeksNum = function(date) {
+  utils.dateMonthWeeksNum = function(date) {
     var daysNum = this.dateMonthDaysNum(date),
         fDayO = this.datePurify(date).getDay(),
         fDay = fDayO ? (fDayO - 1) : 6;
     return Math.ceil((daysNum + fDay) / 7);
   };
+  utils.dateDaysDiff = function(date1, date2) {
+    return Math.abs((+date1 - +date2) / (1000 * 60 * 60 * 24));
+  };
+
+
 
   var Calendar = function(container, settings) {
     this.options = $.extend({
@@ -89,7 +94,7 @@
 
     this.start = this.dateFromYMD(this.options.start);
     this.current = this.datePurify(this.start);
-    this.today = this.datePurify(new Date(), true);
+    this.today = this.dateClone(new Date());
 
     this.transform = this.__supports('transform');
     this.transition = this.__supports('transition');
@@ -120,14 +125,10 @@
   };
   Calendar.prototype.reset = function() {
     var props = {},
-        _this = this,
-        yesterday = this.dateClone(this.start);
+        _this = this;
 
     props[this.transition] = this.transform + ' ' + (this.options.duration / 1000) + 's';
     this.slide(0);
-
-    yesterday.setDate(yesterday.getDate() - 1);
-    this.selectRange(this.dateToYMD(this.current), this.dateToYMD(yesterday), 'locked');
 
     setTimeout(function() {
       _this.els.label.css(props);
@@ -137,6 +138,7 @@
 
   Calendar.prototype.logic = function() {
     var _this = this;
+
     var handlePrev = function() {
       if (_this.els.prev.hasClass('disabled')) return;
       _this.slide(-1);
@@ -146,27 +148,15 @@
       _this.slide(1);
     };
 
-    var handleMoveCalendar = function() {
-      var date = this.getAttribute('data-date');
-
-      if (~this.className.indexOf('active') || !date) return;
-
-      if (_this.current.getMonth() < +date.split('-')[1] - 1) {
-        handleNext();
-      }
-      else {
-        handlePrev();
-      }
-    };
-
     var handleSelect = function() {
       var date = this.getAttribute('data-date');
 
-      if (~this.className.indexOf('locked') || !date || ~_this.selected.indexOf(date)) return;
+      if (~this.className.indexOf('past') || !date || ~_this.selected.indexOf(date)) return;
 
-      if (_this.selected.length > 1) {
-        _this.selected.length = 0;
-      }
+      if (_this.current.getMonth() > +date.split('-')[1] - 1) handlePrev();
+      if (_this.current.getMonth() < +date.split('-')[1] - 1) handleNext();
+
+      if (_this.selected.length > 1) _this.selected.length = 0;
 
       _this.selected.push(date);
       _this.handleSelection();
@@ -175,8 +165,7 @@
     this.els.prev.on('tap', handlePrev);
     this.els.next.on('tap', handleNext);
 
-    this.els.calendar.on('tap', 'li.active', handleSelect); // order is important
-    this.els.calendar.on('tap', 'li', handleMoveCalendar);
+    this.els.calendar.on('tap', 'li', handleSelect);
   };
 
   Calendar.prototype.slide = function(shift) {
@@ -198,40 +187,30 @@
   };
 
   Calendar.prototype.handleLimits = function() {
-    if (this.shift === 0) {
-      this.els.prev.addClass('disabled');
-    }
-    if (this.shift === 1) {
-      this.els.prev.removeClass('disabled');
-    }
+    if (this.shift === 0) this.els.prev.addClass('disabled');
+    if (this.shift === 1) this.els.prev.removeClass('disabled');
   };
 
   Calendar.prototype.handleSelection = function() {
-    var active = this.els.calendar.find('.active');
     this.els.calendar.find('li.selected').removeClass('selected selected_first selected_second');
 
     if (this.selected.length > 1) {
       this.selected.sort(); // TODO: check if this is actually safe
 
-      active.filter('li[data-date="' + this.selected[0] + '"]').addClass('selected_first');
-      active.filter('li[data-date="' + this.selected[1] + '"]').addClass('selected_second');
-
-      this.selected.push('selected');
+      this.els.calendar.find('li[data-date="' + this.selected[0] + '"]').addClass('selected_first');
+      this.els.calendar.find('li[data-date="' + this.selected[1] + '"]').addClass('selected_second');
 
       this.selectRange.apply(this, this.selected);
     }
     else {
-      active.filter('li[data-date="' + this.selected[0] + '"]').addClass('selected');
+      this.els.calendar.find('li[data-date="' + this.selected[0] + '"]').addClass('selected');
     }
   };
-  Calendar.prototype.selectRange = function(ymd1, ymd2, className) {
+  Calendar.prototype.selectRange = function(ymd1, ymd2) {
     var current = this.els.calendar.find('li[data-date="' + ymd1 + '"]'),
-        length = this.dateFromYMD(ymd2).getDate() - this.dateFromYMD(ymd1).getDate() + 1,
-        i = 0;
+        length = this.dateDaysDiff(this.dateFromYMD(ymd2), this.dateFromYMD(ymd1)) + 1;
 
-    for (; i < length; i++) {
-      current = current.addClass(className).next();
-    }
+    for (var i = 0; i < length; i++) current = current.addClass('selected').next();
   };
 
   Calendar.prototype.slideHeader = function() {
@@ -248,7 +227,7 @@
 
     this.els.calendar.css(props);
     this.els.holder.css({
-      height: this.getMonthWeeksNum(this.current) * this.size.cell
+      height: this.dateMonthWeeksNum(this.current) * this.size.cell
     });
   };
   Calendar.prototype.setActive = function() {
@@ -265,11 +244,11 @@
   };
 
   Calendar.prototype.firstRender = function() {
-    var currentMonth = this.datePurify(this.start),
-        prevMonth = this.dateClone(currentMonth); prevMonth.setMonth(this.start.getMonth() - 1);
+    var currentMonth = this.dateClone(this.current),
+        prevMonth = this.dateClone(this.current); prevMonth.setMonth(this.start.getMonth() - 1);
 
     var prevDaysNum = this.dateMonthDaysNum(prevMonth),
-        prefillDaysNum = (this.start.getDay() ? this.start.getDay() : 7) - 1,
+        prefillDaysNum = (currentMonth.getDay() ? currentMonth.getDay() : 7) - 1,
         i = 0,
 
         html = '';

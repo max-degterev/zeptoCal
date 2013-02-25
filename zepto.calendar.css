@@ -122,7 +122,7 @@ body {
       .z-c-calendar li.active {
         color: #4b5c66;
       }
-      .z-c-calendar li.locked {
+      .z-c-calendar li.past {
         color: inherit;
       }
       .z-c-calendar li.selected {
